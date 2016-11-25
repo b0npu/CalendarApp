@@ -1,7 +1,7 @@
-package com.b0npu.calendar
+package com.b0npu.calendarapp
 
 import android.os.Build.VERSION_CODES.LOLLIPOP
-import com.b0npu.calendar.R
+import com.b0npu.calendarapp.R
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.scalatest.{ FlatSpec, Matchers, RobolectricSuite }
