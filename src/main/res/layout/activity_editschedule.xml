@@ -5,6 +5,7 @@
               android:layout_height="match_parent"
               android:weightSum="1">
 
+    <!-- 予定を最大の広さにして日付と時間と予定のViewを縦に並べる -->
     <TextView android:hint="Date"
               android:id="@+id/scheduleDateView"
               android:textSize="32sp"
@@ -22,8 +23,8 @@
     <EditText android:id="@+id/scheduleEditText"
               android:hint="予定"
               android:layout_weight="1"
-              android:layout_width="match_parent"
               android:layout_height="0dp"
+              android:layout_width="match_parent"
               android:inputType="textMultiLine"
               android:gravity="top"
               android:textSize="24sp"

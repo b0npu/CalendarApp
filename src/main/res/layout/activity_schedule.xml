@@ -26,6 +26,11 @@
 
     </RelativeLayout>
 
+    <!-- 予定を表示するListViewの上に区切り線を入れる -->
+    <View android:layout_width="match_parent"
+          android:layout_height="1dp"
+          android:background="#e4e4e4"/>
+
     <!-- 予定表をリストで表示する -->
     <ListView android:id="@+id/scheduleListView"
               android:layout_width="fill_parent"
