@@ -13,15 +13,18 @@ import android.view.View.OnClickListener
 import android.widget._
 
 /**
-  * 予定表を編集する画面を表示するクラス
+  * 予定の編集と登録をする画面を表示するクラス
   *
+  * アプリの画面を生成するonCreateメソッドでScheduleActivityからIntentを受取り
+  * Intentに選択された日付が付加されている場合は新しい予定の登録を行ない
+  * Intentに予定のデータベースIDが付加されている場合は予定の編集を行う
   */
 class EditScheduleActivity extends AppCompatActivity with TypedFindView {
 
   /**
     * フィールドの定義
     *
-    * 複数のメソッドで扱うwidgetのidを格納する変数を定義する
+    * 複数のメソッドで扱うwidgetのidを格納するための変数を定義する
     * (自クラスで使うだけのフィールドはprivateにして明示的に非公開にしてます)
     */
   private var scheduleDateView: TextView = _
@@ -32,6 +35,11 @@ class EditScheduleActivity extends AppCompatActivity with TypedFindView {
     * アプリの画面を生成
     *
     * アプリを起動するとonCreateが呼ばれてActivityが初期化される
+    * 選択された日付と予定のデータベースIDをIntentから取得し
+    * データベースIDがIntentに付加されていた場合はviewScheduleItemメソッドで
+    * SQLiteデータベースに保存されている予定を表示する
+    * saveButtonを押した際にscheduleEditTextに予定が入力されていれば
+    * saveScheduleToDBでSQLiteデータベースに予定を保存する
     */
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -78,19 +86,23 @@ class EditScheduleActivity extends AppCompatActivity with TypedFindView {
   /**
     * viewScheduleItemメソッドの定義
     *
+    * SQLiteデータベースからデータベースIDがscheduleItemIdと一致する予定の
+    * 日時と時間と内容を取得してレイアウトに配置したViewに表示する
     */
   private def viewScheduleItem(scheduleItemId: String): Unit = {
 
-    val scheduleContentResolver: ContentResolver = getContentResolver
+    /* scheduleItemIdからSQLステートメントを作成しデータベースに問い合わせた検索結果をCursorに格納する */
     val scheduleItemSelection = s"${ScheduleDB.ID} = $scheduleItemId"
-
+    val scheduleContentResolver: ContentResolver = getContentResolver
     val scheduleContentCursor: Cursor = scheduleContentResolver.query(ScheduleDB.CONTENT_URI, null, scheduleItemSelection, null, null)
 
+    /* Cursorに格納された予定の日時と時間と内容を習得する */
     scheduleContentCursor.moveToFirst
     val scheduleDate = scheduleContentCursor.getString(scheduleContentCursor.getColumnIndex(ScheduleDB.DATE))
     val scheduleTime = scheduleContentCursor.getString(scheduleContentCursor.getColumnIndex(ScheduleDB.TIME))
     val scheduleContent = scheduleContentCursor.getString(scheduleContentCursor.getColumnIndex(ScheduleDB.CONTENT))
 
+    /* レイアウトに配置したViewに取得した予定の日付と時間と内容を表示する */
     scheduleDateView.setText(scheduleDate)
     scheduleTimeView.setText(scheduleTime)
     scheduleEditText.setText(scheduleContent)
@@ -99,20 +111,21 @@ class EditScheduleActivity extends AppCompatActivity with TypedFindView {
   /**
     * selectScheduleTimeメソッドの定義
     *
+    * TimePickerで選択した時間をscheduleTimeViewに表示する
     */
   private def selectScheduleTime: Unit = {
 
-    /* 時間を選択してscheduleTimeViewに表示する */
+    /* scheduleTimeViewを選択してTimePickerを表示する */
     scheduleTimeView.setOnClickListener(new OnClickListener {
-
       override def onClick(view: View): Unit = {
+
         /* Calendarユーティリティから現在時刻を取得してTimePickerに現在時刻を表示する */
         val calendarUtility = Calendar.getInstance
         val nowHour = calendarUtility.get(Calendar.HOUR_OF_DAY)
         val nowMinute = calendarUtility.get(Calendar.MINUTE)
         new TimePickerDialog(EditScheduleActivity.this, style.Theme_Holo_Light_Dialog, new OnTimeSetListener {
           override def onTimeSet(timePicker: TimePicker, selectHour: Int, selectMinute: Int): Unit = {
-            /* TimePickerで選択した時間を表示する */
+            /* TimePickerで選択した時間をHH:MMの形に整えて表示する */
             scheduleTimeView.setText(f"$selectHour%02d : $selectMinute%02d")
           }
         }, nowHour, nowMinute, true).show
@@ -123,11 +136,12 @@ class EditScheduleActivity extends AppCompatActivity with TypedFindView {
   /**
     * saveScheduleToDBメソッドの定義
     *
-    * 予定をSQLiteデータベースに保存する
+    * scheduleItemIdがある場合はSQLiteデータベースにある予定をupdateし
+    * scheduleItemIdが無い場合はSQLiteデータベースに予定をinsertする
     */
   private def saveScheduleToDB(scheduleItemId: String): Unit = {
 
-    /* 予定編集画面に表示された日付と時間と予定を習得する */
+    /* 予定編集画面に表示された日付と時間と予定の内容を習得する */
     val scheduleDate = scheduleDateView.getText.toString
     val selectedTime = scheduleTimeView.getText.toString
     val writtenSchedule = scheduleEditText.getText.toString
@@ -141,7 +155,7 @@ class EditScheduleActivity extends AppCompatActivity with TypedFindView {
     /* ContentProviderを使いSQLiteデータベースに予定を保存する */
     val scheduleContentResolver: ContentResolver = getContentResolver
     if (writtenSchedule.isEmpty) {
-      /* scheduleEditTextに記入された予定が無ければ通知する */
+      /* scheduleEditTextに記入された予定が無ければ保存せずに通知する */
       Toast.makeText(
         EditScheduleActivity.this,
         "予定が入っていません\n予定を入力してから保存して下さい",
