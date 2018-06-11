@@ -167,6 +167,8 @@ class ScheduleActivity extends FragmentActivity with TypedFindView with LoaderCa
 
     /* 以前のCursorと新しいCursorを取り替える */
     scheduleContentCursorAdapter.swapCursor(cursor)
+    /* Cursorを取り替えたらデータベースIDの配列を作り直す */
+    scheduleItemIdArray = Array.empty
 
     /* Cursorに格納された予定表の検索結果の先頭から順に予定のデータベースIDを取得し配列に格納する */
     if (cursor.moveToFirst) {
